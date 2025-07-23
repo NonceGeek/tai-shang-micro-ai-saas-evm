@@ -4,6 +4,7 @@ import "./globals.css";
 
 import { headers } from 'next/headers'
 import ContextProvider from '@/context'
+import Header from '@/components/Header'
 
 const roboto = Roboto({
   variable: "--font-roboto",
@@ -17,7 +18,7 @@ const robotoMono = Roboto_Mono({
 
 export const metadata: Metadata = {
   title: "Tai Shang Micro AI",
-  description: "Tai Shang Micro AI",
+  description: "Assign each an on-chain identity </>",
 };
 
 export default async function RootLayout({
@@ -31,7 +32,10 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={`${roboto.variable} ${robotoMono.variable} antialiased`}>
-        <ContextProvider cookies={cookies}>{children}</ContextProvider>
+        <ContextProvider cookies={cookies}>
+          <Header />
+          {children}
+        </ContextProvider>
       </body>
     </html>
   );
