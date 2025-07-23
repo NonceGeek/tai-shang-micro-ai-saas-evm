@@ -26,6 +26,9 @@ if (!projectId) {
     defaultNetwork: metisSepolia,
     metadata,
     features: { analytics: false, email: false, socials: false },
+    themeVariables: {
+      "--w3m-accent": "#000",
+    },
   });
 }
 
