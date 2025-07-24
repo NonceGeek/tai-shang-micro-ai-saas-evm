@@ -113,7 +113,8 @@ function WaveBackground() {
       // Parallax: waves move at different speeds
       drawWave(t * 1.1, 90 + 20 * Math.sin(t * 0.01), 0.008 + 0.002 * Math.sin(t * 0.008), getNeonGradient(height * 0.38, '#00fff7', '#3b82f6'), 0.002, height * 0.38, 0, 0.18);
       drawWave(t * 1.4, 60 + 10 * Math.cos(t * 0.012), 0.012 + 0.001 * Math.cos(t * 0.01), getNeonGradient(height * 0.52, '#a855f7', '#06b6d4'), 0.003, height * 0.52, Math.PI / 2, 0.22);
-      drawWave(t * 1.7, 40 + 15 * Math.sin(t * 0.008 + 1), 0.018 + 0.001 * Math.sin(t * 0.012), getNeonGradient(height * 0.68, '#f472b6', '#818cf8'), 0.004, height * 0.68, Math.PI, 0.25);
+      // 底部波浪渐变到第二屏深色
+      drawWave(t * 1.7, 40 + 15 * Math.sin(t * 0.008 + 1), 0.018 + 0.001 * Math.sin(t * 0.012), getNeonGradient(height * 0.68, '#f472b6', 'rgb(44,40,64)'), 0.004, height * 0.68, Math.PI, 0.25);
       // Add a thin, bright, sharp wave for extra tech feel
       drawWave(t * 2.2, 18, 0.022, getNeonGradient(height * 0.60, '#fff', '#60a5fa'), 0.006, height * 0.60, Math.PI / 3, 0.5);
       t += 1;

@@ -2,6 +2,11 @@
 
 import React from 'react';
 import Hero from '@/components/Hero';
+import AgentSection from '@/components/AgentSection';
+import TargetAudienceSection from '@/components/TargetAudienceSection';
+import HowItWorksSection from '@/components/HowItWorksSection';
+import GetStartedSection from '@/components/GetStartedSection';
+import AllTaskSection from '@/components/AllTaskSection';
 
 export default function HomePage() {
   return (
@@ -14,10 +19,20 @@ export default function HomePage() {
         ctaHref="#meet-agent"
       />
       
-      {/* Anchor Section (for demonstration, can be replaced with real content) */}
-      <div id="meet-agent" className="w-full flex flex-col items-center py-24 bg-gray-50 dark:bg-gray-900">
-        <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Meet Your AI Agent</h3>
-      </div>
+      {/* Agent Section */}
+      <AgentSection />
+      
+      {/* Target Audience Section */}
+      <TargetAudienceSection />
+      
+      {/* How It Works Section */}
+      <HowItWorksSection />
+      
+      {/* Get Started Section */}
+      <GetStartedSection />
+      
+      {/* All Task Section */}
+      <AllTaskSection />
     </div>
   );
 }

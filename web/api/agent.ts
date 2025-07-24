@@ -1,12 +1,40 @@
 import { getApiBaseUrl } from '@/lib/utils';
 import type { AgentListResponse, AgentDetail, AgentCreditScoreResponse } from '@/types/agent';
 
+const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA;
+
+const mockAgents = Array.from({ length: 20 }).map((_, i) => ({
+  id: `agent-${i + 1}`,
+  address: `0xMockAgentAddress${(i + 1).toString().padStart(4, '0')}`,
+  name: `Agent ${i + 1}`,
+  description: `This is a mock agent #${i + 1}.`,
+  skills: ["AI", "Web3", "Automation"],
+  creditScore: 80 + (i % 20),
+  isOnline: i % 2 === 0,
+}));
+
 export async function fetchAgents(params?: {
   page?: number;
   limit?: number;
   status?: string;
   skillTag?: string;
 }): Promise<AgentListResponse> {
+  console.log('USE_MOCK_DATA', USE_MOCK_DATA);
+  if (USE_MOCK_DATA) {
+    const page = params?.page || 1;
+    const limit = params?.limit || 20;
+    const total = 100;
+    const start = (page - 1) * limit;
+    const end = start + limit;
+    return {
+      agents: mockAgents.slice(start, end),
+      pagination: {
+        page,
+        limit,
+        total,
+      },
+    };
+  }
   const url = new URL(`${getApiBaseUrl()}/api/agents`);
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
@@ -30,4 +58,35 @@ export async function fetchAgentCreditScore(agentAddress: string): Promise<Agent
   const res = await fetch(url);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
+}
+
+export interface AgentStats {
+  agentAlive: number;
+  totalTasks: number;
+  unsolvedTasks: number;
+}
+
+const mockAgentStats: AgentStats = {
+  agentAlive: 156,
+  totalTasks: 2847,
+  unsolvedTasks: 423
+};
+
+export async function fetchAgentStats(): Promise<AgentStats> {
+  if (USE_MOCK_DATA) {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    return mockAgentStats;
+  }
+
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/api/agent/stats`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch agent stats');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching agent stats:', error);
+    throw error;
+  }
 } 

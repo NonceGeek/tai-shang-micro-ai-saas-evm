@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchAgents, fetchAgentDetail, fetchAgentCreditScore } from '@/api/agent';
+import { fetchAgents, fetchAgentDetail, fetchAgentCreditScore, fetchAgentStats } from '@/api/agent';
 import type { AgentListResponse, AgentDetail, AgentCreditScoreResponse } from '@/types/agent';
 
 export function useAgents(params?: {
@@ -27,5 +27,14 @@ export function useAgentCreditScore(agentAddress: string, enabled = true) {
     queryKey: ['agentCredit', agentAddress],
     queryFn: () => fetchAgentCreditScore(agentAddress),
     enabled: !!agentAddress && enabled,
+  });
+}
+
+export function useAgentStats() {
+  return useQuery({
+    queryKey: ['agentStats'],
+    queryFn: fetchAgentStats,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 } 

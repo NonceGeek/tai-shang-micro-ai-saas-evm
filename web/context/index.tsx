@@ -27,7 +27,7 @@ if (!projectId) {
     metadata,
     features: { analytics: false, email: false, socials: false },
     themeVariables: {
-      "--w3m-accent": "#000",
+      "--w3m-accent": "#2c2840",
     },
   });
 }
