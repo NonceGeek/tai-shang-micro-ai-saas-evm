@@ -410,6 +410,8 @@ export async function fetchTasks(params?: {
   limit?: number;
   status?: string;
   skillTag?: string;
+  onchainTaskId?: string;
+  creatorAddress?: string;
 }): Promise<TaskListResponse> {
   if (USE_MOCK_DATA) {
     // Simulate API delay
@@ -427,6 +429,18 @@ export async function fetchTasks(params?: {
         task.details?.requiredSkills?.some(skill => 
           skill.toLowerCase().includes(params.skillTag!.toLowerCase())
         )
+      );
+    }
+
+    if (params?.onchainTaskId) {
+      filteredTasks = filteredTasks.filter(task => 
+        task.onchainTaskId.toLowerCase().includes(params.onchainTaskId!.toLowerCase())
+      );
+    }
+
+    if (params?.creatorAddress) {
+      filteredTasks = filteredTasks.filter(task => 
+        task.creatorAddress.toLowerCase().includes(params.creatorAddress!.toLowerCase())
       );
     }
     
@@ -478,45 +492,4 @@ export async function fetchTaskDetail(taskId: string): Promise<TaskDetail> {
   return res.json();
 }
 
-export async function searchTasks(params: {
-  query: string;
-  page?: number;
-  limit?: number;
-}): Promise<TaskListResponse> {
-  if (USE_MOCK_DATA) {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const { query, page = 1, limit = 10 } = params;
-    
-    // Search in task ID and creator address
-    const filteredTasks = mockTasks.filter(task => 
-      task.id.toLowerCase().includes(query.toLowerCase()) ||
-      task.onchainTaskId.toLowerCase().includes(query.toLowerCase()) ||
-      task.creatorAddress.toLowerCase().includes(query.toLowerCase())
-    );
-    
-    // Apply pagination
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
-    
-    return {
-      tasks: paginatedTasks,
-      pagination: {
-        page,
-        limit,
-        total: filteredTasks.length
-      }
-    };
-  }
-
-  const url = new URL(`${getApiBaseUrl()}/api/tasks/search`);
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined) url.searchParams.append(key, String(value));
-  });
-  
-  const res = await fetch(url.toString());
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
-} 
+ 

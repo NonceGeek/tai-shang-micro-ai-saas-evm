@@ -7,6 +7,8 @@ export function useTasks(params?: {
   limit?: number;
   status?: string;
   skillTag?: string;
+  onchainTaskId?: string;
+  creatorAddress?: string;
 }) {
   return useQuery<TaskListResponse>({
     queryKey: ['tasks', params],
@@ -22,14 +24,4 @@ export function useTaskDetail(taskId: string, enabled = true) {
   });
 }
 
-export function useSearchTasks(params: {
-  query: string;
-  page?: number;
-  limit?: number;
-}) {
-  return useQuery<TaskListResponse>({
-    queryKey: ['search-tasks', params],
-    queryFn: () => searchTasks(params),
-    enabled: !!params.query.trim(),
-  });
-} 
+ 

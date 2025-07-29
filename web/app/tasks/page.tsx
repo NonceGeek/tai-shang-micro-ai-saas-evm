@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useTasks, useSearchTasks } from "@/hooks/useTask";
+import { useTasks } from "@/hooks/useTask";
 import { useAgents } from "@/hooks/useAgent";
 import type { Agent } from "@/types/agent";
 import { motion } from "framer-motion";
@@ -42,33 +42,25 @@ export default function TasksPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [isSearching, setIsSearching] = useState(false);
+  const [searchType, setSearchType] = useState<"onchainTaskId" | "creatorAddress">("onchainTaskId");
+  const [activeSearchQuery, setActiveSearchQuery] = useState<string>("");
+  const [activeSearchType, setActiveSearchType] = useState<"onchainTaskId" | "creatorAddress">("onchainTaskId");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
 
-  // Task List - Regular or Search
-  const { data, isLoading, error ,refetch} = useTasks({
+  // Task List with filters
+  const { data, isLoading, error, refetch } = useTasks({
     page: currentPage,
     limit: 20,
     status: statusFilter || undefined,
+    onchainTaskId: activeSearchQuery && activeSearchType === "onchainTaskId" ? activeSearchQuery : undefined,
+    creatorAddress: activeSearchQuery && activeSearchType === "creatorAddress" ? activeSearchQuery : undefined,
   });
 
-  // Search Tasks
-  const {
-    data: searchData,
-    isLoading: isSearchLoading,
-    error: searchError,
-  } = useSearchTasks({
-    query: searchQuery,
-    page: currentPage,
-    limit: 20,
-  });
-
-  // Use search results if searching, otherwise use regular task list
-  const tasks = isSearching ? searchData?.tasks || [] : data?.tasks || [];
-  const pagination = isSearching ? searchData?.pagination : data?.pagination;
-  const isLoadingTasks = isSearching ? isSearchLoading : isLoading;
-  const taskError = isSearching ? searchError : error;
+  const tasks = data?.tasks || [];
+  const pagination = data?.pagination;
+  const isLoadingTasks = isLoading;
+  const taskError = error;
 
   // Agent List
   const {
@@ -187,11 +179,11 @@ export default function TasksPage() {
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h1 className="text-3xl font-bold text-white mb-2">
-                    {isSearching ? "Search Results" : "Task List"}
+                    {activeSearchQuery ? "Search Results" : "Task List"}
                   </h1>
                   <p className="text-white/70">
-                    {isSearching
-                      ? `Searching for: "${searchQuery}" - Found ${
+                    {activeSearchQuery
+                      ? `Searching for: "${activeSearchQuery}" - Found ${
                           pagination?.total || 0
                         } results`
                       : "Discover and participate in various AI Agent tasks"}
@@ -204,20 +196,6 @@ export default function TasksPage() {
                       refetch();
                     }}
                   />
-                  {isSearching && (
-                    <button
-                      onClick={() => {
-                        setSearchQuery("");
-                        setIsSearching(false);
-                        setCurrentPage(1);
-                      }}
-                      className="h-8 inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition-colors border border-white/10"
-                      aria-label="Clear Search and Return to Task List"
-                    >
-                      <X className="h-4 w-4 mr-2" />
-                      Clear Search
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
@@ -226,8 +204,9 @@ export default function TasksPage() {
               className="mb-8 flex flex-wrap gap-4"
               onSubmit={(e) => {
                 e.preventDefault();
+                setActiveSearchQuery(searchQuery);
+                setActiveSearchType(searchType);
                 setCurrentPage(1);
-                setIsSearching(!!searchQuery.trim());
               }}
             >
               <Select
@@ -235,7 +214,8 @@ export default function TasksPage() {
                 onValueChange={(value) => {
                   setStatusFilter(value === "all" ? "" : value);
                   setCurrentPage(1);
-                  setIsSearching(false); // Reset search when changing status filter
+                  setSearchQuery(""); // Reset search when changing status filter
+                  setActiveSearchQuery(""); // Reset active search when changing status filter
                 }}
               >
                 <SelectTrigger className="w-[180px] bg-[#23203a] border border-white/10 text-white placeholder-white/60">
@@ -249,9 +229,21 @@ export default function TasksPage() {
                 </SelectContent>
               </Select>
               <div className="flex gap-2">
+                <Select
+                  value={searchType}
+                  onValueChange={(value: "onchainTaskId" | "creatorAddress") => setSearchType(value)}
+                >
+                  <SelectTrigger className="w-[180px] bg-[#23203a] border border-white/10 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="onchainTaskId">Task ID</SelectItem>
+                    <SelectItem value="creatorAddress">Creator Address</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Input
                   type="text"
-                  placeholder="Search by task ID or creator address..."
+                  placeholder={searchType === "onchainTaskId" ? "Search by task ID..." : "Search by creator address..."}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-[250px] bg-[#23203a] border border-white/10 text-white placeholder-white/60"
@@ -264,84 +256,105 @@ export default function TasksPage() {
                   <Search className="h-5 w-5 mr-1" />
                   Search
                 </button>
-                {isSearching && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchQuery("");
-                      setIsSearching(false);
-                      setCurrentPage(1);
-                    }}
-                    className="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700 transition-colors border border-white/10"
-                    aria-label="Clear Search"
-                  >
-                    <X className="h-4 w-4 mr-1" />
-                    Clear
-                  </button>
-                )}
+                {activeSearchQuery && (
+                    <button
+                      onClick={() => {
+                        setSearchQuery("");
+                        setActiveSearchQuery("");
+                        setCurrentPage(1);
+                      }}
+                      className="h-8 inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition-colors border border-white/10"
+                      aria-label="Clear Search and Return to Task List"
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Clear Search
+                    </button>
+                  )}
               </div>
             </form>
             {/* Task Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-              {tasks.map((task: Task) => (
-                <motion.div
-                  key={task.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="bg-[#23203a] rounded-lg p-6 shadow-xl border border-white/10 transition-all duration-200 cursor-pointer hover:shadow-[0_8px_32px_0_rgba(75,63,221,0.18)] hover:scale-105 hover:border-[#4b3fdd]"
-                  onClick={() => handleTaskClick(task.id)}
-                >
-                  {/* Status Badge */}
-                  <div className="flex justify-between items-start mb-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
-                        task.status
-                      )} !bg-[#e6e6ea]`}
-                    >
-                      {getStatusText(task.status)}
-                    </span>
-                  </div>
-                  {/* Task Title */}
-                  <h3 className="font-semibold text-white mb-2 line-clamp-2">
-                    {task.details.description}
-                  </h3>
-                  {/* Bounty */}
-                  <div className="flex items-center text-sm text-green-300 mb-3">
-                    <DollarSign className="w-4 h-4 mr-1" />
-                    {task.details.bounty}
-                  </div>
-                  {/* Skills */}
-                  <div className="mb-4">
-                    <div className="flex flex-wrap gap-1">
-                      {task.details?.requiredSkills
-                        ?.slice(0, 3)
-                        .map((skill, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-[#4b3fdd]/20 text-[#a5a1f7] text-xs rounded"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      {task.details?.requiredSkills?.length &&
-                        task.details?.requiredSkills?.length > 3 && (
-                          <span className="px-2 py-1 bg-white/10 text-white/60 text-xs rounded">
-                            +{task.details?.requiredSkills?.length - 3}
-                          </span>
-                        )}
+            {tasks.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+                {tasks.map((task: Task) => (
+                  <motion.div
+                    key={task.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="bg-[#23203a] rounded-lg p-6 shadow-xl border border-white/10 transition-all duration-200 cursor-pointer hover:shadow-[0_8px_32px_0_rgba(75,63,221,0.18)] hover:scale-105 hover:border-[#4b3fdd]"
+                    onClick={() => handleTaskClick(task.id)}
+                  >
+                    {/* Status Badge */}
+                    <div className="flex justify-between items-start mb-4">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
+                          task.status
+                        )} !bg-[#e6e6ea]`}
+                      >
+                        {getStatusText(task.status)}
+                      </span>
                     </div>
-                  </div>
-                  {/* Footer */}
-                  <div className="flex items-center justify-between text-xs text-white/60">
-                    <div className="flex items-center">
-                      <Calendar className="w-3 h-3 mr-1" />
-                      {new Date(task.details.deadline).toLocaleDateString()}
+                    {/* Task Title */}
+                    <h3 className="font-semibold text-white mb-2 line-clamp-2">
+                      {task.details.description}
+                    </h3>
+                    {/* Bounty */}
+                    <div className="flex items-center text-sm text-green-300 mb-3">
+                      <DollarSign className="w-4 h-4 mr-1" />
+                      {task.details.bounty}
                     </div>
+                    {/* Skills */}
+                    <div className="mb-4">
+                      <div className="flex flex-wrap gap-1">
+                        {task.details?.requiredSkills
+                          ?.slice(0, 3)
+                          .map((skill, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-[#4b3fdd]/20 text-[#a5a1f7] text-xs rounded"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        {task.details?.requiredSkills?.length &&
+                          task.details?.requiredSkills?.length > 3 && (
+                            <span className="px-2 py-1 bg-white/10 text-white/60 text-xs rounded">
+                              +{task.details?.requiredSkills?.length - 3}
+                            </span>
+                          )}
+                      </div>
+                    </div>
+                    {/* Footer */}
+                    <div className="flex items-center justify-between text-xs text-white/60">
+                      <div className="flex items-center">
+                        <Calendar className="w-3 h-3 mr-1" />
+                        {new Date(task.details.deadline).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="bg-[#23203a] rounded-lg p-8 border border-white/10">
+                  <div className="text-white/60 text-lg mb-2">
+                    {activeSearchQuery ? (
+                      <>
+                        <Search className="w-8 h-8 mx-auto mb-4 text-white/40" />
+                        <p>No tasks found for &quot;{activeSearchQuery}&quot;</p>
+                        <p className="text-sm mt-2">Try adjusting your search criteria</p>
+                      </>
+                    ) : (
+                      <>
+                        <Users className="w-8 h-8 mx-auto mb-4 text-white/40" />
+                        <p>No tasks available</p>
+                        <p className="text-sm mt-2">Check back later for new tasks</p>
+                      </>
+                    )}
                   </div>
-                </motion.div>
-              ))}
-            </div>
+                </div>
+              </div>
+            )}
             {/* Pagination */}
             {pagination && pagination.total > 0 && (
               <Pagination>
