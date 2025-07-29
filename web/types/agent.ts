@@ -28,4 +28,13 @@ export interface AgentCreditScoreResponse {
   agentAddress: string;
   creditScore: number;
   lastUpdated: string;
+}
+
+export interface TaskCountStats {
+  total: number;
+  unresolved: number;
+}
+
+export interface OnlineAgentCount {
+  count: number;
 } 

@@ -10,7 +10,7 @@ export interface Task {
     taskId: string;
     bounty: string;
     description: string;
-    requiredSkills: string[];
+    requiredSkills?: string[];
     deadline: string;
   };
   createdAt: string;

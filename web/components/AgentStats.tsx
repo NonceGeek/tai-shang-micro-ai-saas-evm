@@ -1,18 +1,22 @@
 "use client";
 import React, { useRef } from 'react';
-import { useAgentStats } from '@/hooks/useAgent';
+import { useTaskCountStats, useOnlineAgentCount } from '@/hooks/useAgent';
 import { motion, useInView } from 'framer-motion';
 import { Users, Target, AlertCircle } from 'lucide-react';
 
 export default function AgentStats() {
-  const { data: stats, isLoading, error } = useAgentStats();
+  const { data: taskStats, isLoading: isTaskStatsLoading, error: taskStatsError } = useTaskCountStats();
+  const { data: onlineAgentData, isLoading: isOnlineAgentLoading, error: onlineAgentError } = useOnlineAgentCount();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
+
+  const isLoading = isTaskStatsLoading || isOnlineAgentLoading;
+  const error = taskStatsError || onlineAgentError;
 
   const cards = [
     {
       title: "Agent Alive",
-      value: stats?.agentAlive ?? 0,
+      value: onlineAgentData?.count ?? 0,
       icon: Users,
       color: "from-blue-500/20 to-cyan-500/20",
       borderColor: "border-blue-500/30",
@@ -20,7 +24,7 @@ export default function AgentStats() {
     },
     {
       title: "Total Tasks",
-      value: stats?.totalTasks ?? 0,
+      value: taskStats?.total ?? 0,
       icon: Target,
       color: "from-green-500/20 to-emerald-500/20",
       borderColor: "border-green-500/30",
@@ -28,7 +32,7 @@ export default function AgentStats() {
     },
     {
       title: "Unsolved Tasks",
-      value: stats?.unsolvedTasks ?? 0,
+      value: taskStats?.unresolved ?? 0,
       icon: AlertCircle,
       color: "from-orange-500/20 to-red-500/20",
       borderColor: "border-orange-500/30",
@@ -44,7 +48,7 @@ export default function AgentStats() {
             <div className="w-48 h-32 bg-white/10 rounded-xl"></div>
           </div>
         ))
-      ) : error || !stats ? (
+      ) : error ? (
         <div className="text-center text-white/60">
           <p>Failed to load agent statistics</p>
         </div>

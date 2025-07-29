@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchTasks, fetchTaskDetail } from '@/api/task';
+import { fetchTasks, fetchTaskDetail, searchTasks } from '@/api/task';
 import type { TaskListResponse, TaskDetail } from '@/types/task';
 
 export function useTasks(params?: {
@@ -19,5 +19,17 @@ export function useTaskDetail(taskId: string, enabled = true) {
     queryKey: ['task', taskId],
     queryFn: () => fetchTaskDetail(taskId),
     enabled: !!taskId && enabled,
+  });
+}
+
+export function useSearchTasks(params: {
+  query: string;
+  page?: number;
+  limit?: number;
+}) {
+  return useQuery<TaskListResponse>({
+    queryKey: ['search-tasks', params],
+    queryFn: () => searchTasks(params),
+    enabled: !!params.query.trim(),
   });
 } 

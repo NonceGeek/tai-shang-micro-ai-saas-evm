@@ -2,7 +2,7 @@ import { getApiBaseUrl } from '@/lib/utils';
 import type { TaskListResponse, TaskDetail } from '@/types/task';
 
 // Mock data toggle - set to true to use mock data
-const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA;
+const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
 
 // Mock task data
 const mockTasks: TaskDetail[] = [
@@ -230,7 +230,7 @@ const mockTasks: TaskDetail[] = [
     id: '12',
     onchainTaskId: 'task_012',
     creatorAddress: '0xc2345678901fc2345678901fc2345678901fc234',
-    agentAddress: '0xf7890123456abcdef1234567890abcdef1234567890123',
+    agentAddress: '0xf7890123456abcdef1234567890abcdef12345678901234567',
     status: 'PENDING_MATCH',
     details: {
       taskId: 'TASK_012',
@@ -246,7 +246,7 @@ const mockTasks: TaskDetail[] = [
     id: '13',
     onchainTaskId: 'task_013',
     creatorAddress: '0xd3456789012fd3456789012fd3456789012fd345',
-    agentAddress: '0xf8901234567abcdef1234567890abcdef12345678901234',
+    agentAddress: '0xf8901234567abcdef1234567890abcdef123456789012345678',
     status: 'COMPLETED',
     details: {
       taskId: 'TASK_013',
@@ -262,7 +262,7 @@ const mockTasks: TaskDetail[] = [
       description: 'Successfully deployed comprehensive testing framework'
     },
     agent: {
-      address: '0xf8901234567abcdef1234567890abcdef12345678901234',
+      address: '0xf8901234567abcdef1234567890abcdef123456789012345678',
       name: 'AI Agent Iota',
       creditScore: 96
     }
@@ -271,7 +271,7 @@ const mockTasks: TaskDetail[] = [
     id: '14',
     onchainTaskId: 'task_014',
     creatorAddress: '0xe4567890123fe4567890123fe4567890123fe456',
-    agentAddress: '0xf9012345678abcdef1234567890abcdef123456789012345',
+    agentAddress: '0xf9012345678abcdef1234567890abcdef12345678901234567890',
     status: 'IN_PROGRESS',
     details: {
       taskId: 'TASK_014',
@@ -283,7 +283,7 @@ const mockTasks: TaskDetail[] = [
     createdAt: '2024-01-18T14:00:00Z',
     updatedAt: '2024-01-20T08:45:00Z',
     agent: {
-      address: '0xf9012345678abcdef1234567890abcdef123456789012345',
+      address: '0xf9012345678abcdef1234567890abcdef12345678901234567890',
       name: 'AI Agent Kappa',
       creditScore: 89
     }
@@ -424,7 +424,7 @@ export async function fetchTasks(params?: {
     
     if (params?.skillTag) {
       filteredTasks = filteredTasks.filter(task => 
-        task.details.requiredSkills.some(skill => 
+        task.details?.requiredSkills?.some(skill => 
           skill.toLowerCase().includes(params.skillTag!.toLowerCase())
         )
       );
@@ -454,6 +454,7 @@ export async function fetchTasks(params?: {
     });
   }
   const res = await fetch(url.toString());
+  console.log(res);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
@@ -473,6 +474,49 @@ export async function fetchTaskDetail(taskId: string): Promise<TaskDetail> {
 
   const url = `${getApiBaseUrl()}/api/tasks/${taskId}`;
   const res = await fetch(url);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function searchTasks(params: {
+  query: string;
+  page?: number;
+  limit?: number;
+}): Promise<TaskListResponse> {
+  if (USE_MOCK_DATA) {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const { query, page = 1, limit = 10 } = params;
+    
+    // Search in task ID and creator address
+    const filteredTasks = mockTasks.filter(task => 
+      task.id.toLowerCase().includes(query.toLowerCase()) ||
+      task.onchainTaskId.toLowerCase().includes(query.toLowerCase()) ||
+      task.creatorAddress.toLowerCase().includes(query.toLowerCase())
+    );
+    
+    // Apply pagination
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
+    
+    return {
+      tasks: paginatedTasks,
+      pagination: {
+        page,
+        limit,
+        total: filteredTasks.length
+      }
+    };
+  }
+
+  const url = new URL(`${getApiBaseUrl()}/api/tasks/search`);
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined) url.searchParams.append(key, String(value));
+  });
+  
+  const res = await fetch(url.toString());
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 } 

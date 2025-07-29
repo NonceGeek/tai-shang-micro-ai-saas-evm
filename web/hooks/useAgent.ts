@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchAgents, fetchAgentDetail, fetchAgentCreditScore, fetchAgentStats } from '@/api/agent';
+import { fetchAgents, fetchAgentDetail, fetchAgentCreditScore, fetchAgentStats, fetchTaskCountStats, fetchOnlineAgentCount } from '@/api/agent';
 import type { AgentListResponse, AgentDetail, AgentCreditScoreResponse } from '@/types/agent';
 
 export function useAgents(params?: {
@@ -34,6 +34,24 @@ export function useAgentStats() {
   return useQuery({
     queryKey: ['agentStats'],
     queryFn: fetchAgentStats,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+}
+
+export function useTaskCountStats() {
+  return useQuery({
+    queryKey: ['taskCountStats'],
+    queryFn: fetchTaskCountStats,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+}
+
+export function useOnlineAgentCount() {
+  return useQuery({
+    queryKey: ['onlineAgentCount'],
+    queryFn: fetchOnlineAgentCount,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
   });

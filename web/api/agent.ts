@@ -1,7 +1,7 @@
 import { getApiBaseUrl } from '@/lib/utils';
-import type { AgentListResponse, AgentDetail, AgentCreditScoreResponse } from '@/types/agent';
+import type { AgentListResponse, AgentDetail, AgentCreditScoreResponse, TaskCountStats, OnlineAgentCount } from '@/types/agent';
 
-const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA;
+const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
 
 const mockAgents = Array.from({ length: 20 }).map((_, i) => ({
   id: `agent-${i + 1}`,
@@ -87,6 +87,57 @@ export async function fetchAgentStats(): Promise<AgentStats> {
     return await response.json();
   } catch (error) {
     console.error('Error fetching agent stats:', error);
+    throw error;
+  }
+}
+
+
+
+// Mock data for the new endpoints
+const mockTaskCountStats: TaskCountStats = {
+  total: 2847,
+  unresolved: 423
+};
+
+const mockOnlineAgentCount: OnlineAgentCount = {
+  count: 156
+};
+
+export async function fetchTaskCountStats(): Promise<TaskCountStats> {
+  if (USE_MOCK_DATA) {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 200));
+    return mockTaskCountStats;
+  }
+
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/api/tasks/count`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch task count stats');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching task count stats:', error);
+    throw error;
+  }
+}
+
+// New API function for online agent count
+export async function fetchOnlineAgentCount(): Promise<OnlineAgentCount> {
+  if (USE_MOCK_DATA) {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 200));
+    return mockOnlineAgentCount;
+  }
+
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/api/agents/online/count`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch online agent count');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching online agent count:', error);
     throw error;
   }
 } 
