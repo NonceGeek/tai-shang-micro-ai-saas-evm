@@ -31,7 +31,7 @@ export default function Header() {
         <Link href="/" className="text-xl font-bold text-[#2c2840] dark:text-white">
           Tai Shang Micro AI
         </Link>
-        <div>
+        <div className='rounded-full bg-[#2c2840]'>
           <appkit-button />
         </div>
       </div>
