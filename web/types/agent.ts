@@ -8,6 +8,7 @@ export interface Agent {
   skills: string[];
   creditScore: number;
   isOnline: boolean;
+  status: AgentStatus;
 }
 
 export interface AgentDetail extends Agent {

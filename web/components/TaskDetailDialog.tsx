@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { useTaskDetail } from '@/hooks/useTask';
 import { Calendar, DollarSign, User, Clock, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { getStatusColor, getStatusText } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TaskDetailDialogProps {
   taskId: string | null;
@@ -16,38 +18,13 @@ interface TaskDetailDialogProps {
 export default function TaskDetailDialog({ taskId, open, onOpenChange }: TaskDetailDialogProps) {
   const { data: task, isLoading, error } = useTaskDetail(taskId || '', open);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'PENDING_MATCH':
-        return 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30';
-      case 'IN_PROGRESS':
-        return 'bg-blue-500/20 text-blue-600 border-blue-500/30';
-      case 'COMPLETED':
-        return 'bg-green-500/20 text-green-600 border-green-500/30';
-      default:
-        return 'bg-gray-500/20 text-gray-600 border-gray-500/30';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'PENDING_MATCH':
-        return 'Pending Match';
-      case 'IN_PROGRESS':
-        return 'In Progress';
-      case 'COMPLETED':
-        return 'Completed';
-      default:
-        return status;
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl bg-[#2c2840] backdrop-blur-md border border-white/20 shadow-2xl rounded-2xl p-8 text-white">
-        <DialogHeader>
-          <DialogTitle className="text-xl text-white">Task Details</DialogTitle>
-        </DialogHeader>
+        <TooltipProvider>
+          <DialogHeader>
+            <DialogTitle className="text-xl text-white">Task Details</DialogTitle>
+          </DialogHeader>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
@@ -83,9 +60,18 @@ export default function TaskDetailDialog({ taskId, open, onOpenChange }: TaskDet
               {/* Bounty */}
               <div className="flex items-center gap-3 p-4 bg-[#23203a] rounded-lg border border-white/10">
                 <DollarSign className="w-5 h-5 text-green-400" />
-                <div>
+                <div className="flex-1 min-w-0">
                   <p className="text-sm text-white/60">Bounty</p>
-                  <p className="text-lg font-semibold text-green-400">{task.details.bounty}</p>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <p className="text-lg font-semibold text-green-400 truncate">
+                        {task.details.bounty}
+                      </p>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-[#2c2840] border-white/20 text-white">
+                      <p>{task.details.bounty}</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
 
@@ -194,6 +180,7 @@ export default function TaskDetailDialog({ taskId, open, onOpenChange }: TaskDet
             Task not found
           </div>
         )}
+        </TooltipProvider>
       </DialogContent>
     </Dialog>
   );

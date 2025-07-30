@@ -36,6 +36,8 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import CreateTaskDialog from "@/components/CreateTaskDialog";
 import TaskDetailDialog from "@/components/TaskDetailDialog";
+import { getStatusColor, getStatusText } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function TasksPage() {
   const [tab, setTab] = useState<"tasks" | "agents">("tasks");
@@ -84,30 +86,9 @@ export default function TasksPage() {
     setIsDetailDialogOpen(true);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "PENDING_MATCH":
-        return "bg-yellow-500/20 text-yellow-600 border-yellow-500/30";
-      case "IN_PROGRESS":
-        return "bg-blue-500/20 text-blue-600 border-blue-500/30";
-      case "COMPLETED":
-        return "bg-green-500/20 text-green-600 border-green-500/30";
-      default:
-        return "bg-gray-500/20 text-gray-600 border-gray-500/30";
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "PENDING_MATCH":
-        return "Pending Match";
-      case "IN_PROGRESS":
-        return "In Progress";
-      case "COMPLETED":
-        return "Completed";
-      default:
-        return status;
-    }
+  const formatAddress = (address: string) => {
+    if (address.length <= 12) return address;
+    return `${address.slice(0, 6)}...${address.slice(-6)}`;
   };
 
   if (isLoadingTasks) {
@@ -150,7 +131,8 @@ export default function TasksPage() {
 
   return (
     <div className="min-h-screen bg-[#2c2840] pt-20">
-      <div className="container mx-auto px-4 py-8">
+      <TooltipProvider delayDuration={150}>
+        <div className="container mx-auto px-4 py-8">
         <Tabs
           value={tab}
           onValueChange={(v) => {
@@ -224,8 +206,13 @@ export default function TasksPage() {
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="PENDING_MATCH">Pending Match</SelectItem>
+                  <SelectItem value="AWAITING_ACCEPTANCE">Awaiting Acceptance</SelectItem>
                   <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
                   <SelectItem value="COMPLETED">Completed</SelectItem>
+                  <SelectItem value="REJECTED">Rejected</SelectItem>
+                  <SelectItem value="TIMEOUT">Timeout</SelectItem>
+                  <SelectItem value="NO_MATCH_FOUND">No Match Found</SelectItem>
+                  <SelectItem value="EXPIRED">Expired</SelectItem>
                 </SelectContent>
               </Select>
               <div className="flex gap-2">
@@ -289,14 +276,16 @@ export default function TasksPage() {
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
                           task.status
-                        )} !bg-[#e6e6ea]`}
+                        )}`}
                       >
                         {getStatusText(task.status)}
                       </span>
                     </div>
                     {/* Task Title */}
-                    <h3 className="font-semibold text-white mb-2 line-clamp-2">
-                      {task.details.description}
+                    <h3 className="font-semibold text-white mb-2 h-12 overflow-hidden">
+                      <span className="line-clamp-2 block">
+                        {task.details.description}
+                      </span>
                     </h3>
                     {/* Bounty */}
                     <div className="flex items-center text-sm text-green-300 mb-3">
@@ -470,15 +459,86 @@ export default function TasksPage() {
                 {agents.map((agent: Agent) => (
                   <div
                     key={agent.address}
-                    className="bg-[#23203a] rounded-lg p-6 shadow-xl border border-white/10 flex flex-col gap-2 transition-all duration-200 cursor-pointer hover:shadow-[0_8px_32px_0_rgba(75,63,221,0.18)] hover:scale-105 hover:border-[#4b3fdd]"
+                    className="bg-[#23203a] rounded-lg p-6 shadow-xl border border-white/10 flex flex-col gap-3 h-64 transition-all duration-200 cursor-pointer hover:shadow-[0_8px_32px_0_rgba(75,63,221,0.18)] hover:scale-105 hover:border-[#4b3fdd]"
                   >
-                    <div className="font-mono text-xs text-white/60 break-all mb-2">
-                      {agent.address}
-                    </div>
-                    <div className="font-bold text-lg text-white mb-1">
+                    {/* Agent Address */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="font-mono text-xs text-white/60">
+                          {formatAddress(agent.address)}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-[#2c2840] border-white/20 text-white">
+                        <p className="font-mono text-xs">{agent.address}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    
+                    {/* Agent Name */}
+                    <div className="font-bold text-lg text-white">
                       {agent.name || "Unnamed Agent"}
                     </div>
-                    {/* 可根据需要展示更多 agent 字段 */}
+                    
+                    {/* Agent Description */}
+                    {agent.description ? (
+                      <div className="text-sm text-white/80 line-clamp-3 h-12 overflow-hidden">
+                        {agent.description}
+                      </div>
+                    ) : (
+                      <div className="h-12"></div>
+                    )}
+                    
+                    {/* Agent Skills */}
+                    {agent.skills && agent.skills.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {agent.skills.slice(0, 4).map((skill, index) => (
+                          <span
+                            key={index}
+                            className="px-2 py-1 bg-[#4b3fdd]/20 text-[#a5a1f7] text-xs rounded"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                        {agent.skills.length > 4 && (
+                          <span className="px-2 py-1 bg-white/10 text-white/60 text-xs rounded">
+                            +{agent.skills.length - 4}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="min-h-[2rem]"></div>
+                    )}
+                    
+                    {/* Agent Status and Credit Score */}
+                    <div className="flex items-center justify-between mt-auto pt-2">
+                      {/* Online Status */}
+                      <div className="flex items-center gap-1">
+                        <div className={`w-2 h-2 rounded-full ${agent.isOnline ? 'bg-green-400' : 'bg-red-400'}`}></div>
+                        <span className="text-xs text-white/60">
+                          {agent.isOnline ? 'Online' : 'Offline'}
+                        </span>
+                      </div>
+                      
+                      {/* Credit Score */}
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-white/60">Score:</span>
+                        <span className="text-xs font-semibold text-green-400">
+                          {agent.creditScore}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Agent Status Badge */}
+                    {/* <div className="flex justify-start">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium border ${
+                        agent.status === 'ACTIVE' 
+                          ? 'bg-green-500/20 text-green-400 border-green-500/30'
+                          : agent.status === 'INACTIVE'
+                          ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                          : 'bg-red-500/20 text-red-400 border-red-500/30'
+                      }`}>
+                        {agent.status}
+                      </span>
+                    </div> */}
                   </div>
                 ))}
               </div>
@@ -594,6 +654,7 @@ export default function TasksPage() {
           onOpenChange={setIsDetailDialogOpen}
         />
       </div>
+        </TooltipProvider>
     </div>
   );
 }
